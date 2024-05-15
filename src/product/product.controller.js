@@ -2,7 +2,11 @@ const express = require('express');
 const prisma = require('../db');
 
 const { getAllUsers,
-        getUsersById,
+        getUserById,
+        createUser,
+        deleteUserById,
+        patchUserById,
+        editUserById,
  } = require('./product.service');
 
  const router = express.Router();
@@ -17,44 +21,43 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
     try {
-        const uid = parseInt(req.params.id);
-        const user = await getUsersById(parseInt(uid));
+        const uid = parseInt(req.params.id)
+        const user = await getUserById(parseInt(uid));
     
         res.send(user);
-      } catch (err) {
-        res.status(400).send(err.message);
-      }
-    });
+    } catch (error) {
+        res.status(400).send(error.message);
+    }
+
+})
 
 
 router.post("/", async (req, res) => {
-    const newUserData = req.body;
+    try {
+        const newUserData = req.body;
 
-    const user = await prisma.user.create({
-        data:{ 
-            name: newUserData.name,
-            price: newUserData.price,
-            description: newUserData.description,
-            image: newUserData.image,
-        },
-    });
+        const user = await createUser(newUserData);
+    
+        res.send({
+            data: user,
+            message: "create-product-success!!!"
+        });        
+    } catch (error) {
+        res.status(400).send(error.message);    
+    }
 
-    res.send({
-        data: user,
-        message: "create-product-success!!!"
-    });
 });
 
 router.delete("/:id", async (req, res) => {
-    const uid = req.params.id
+    try {
+        const uid = req.params.id;
 
-    await prisma.user.delete({
-        where: {
-            id: parseInt(uid),
-        }
-    });
+        await deleteUserById(parseInt(uid));
 
-    res.send("Value deleted todd")
+        res.send("udah kehapus banh");  
+    } catch (error) {
+        res.status(400).send(error.message)
+    }
 });
 
 router.put("/:id", async (req, res) => {
@@ -72,17 +75,7 @@ router.put("/:id", async (req, res) => {
         return res.status(400).send("ono seng kurang blog");
     }
 
-    const user = await prisma.user.update({
-        where: {
-            id: parseInt(uid),
-        },
-        data: {
-            name: userData.name,
-            price: userData.price,
-            description: userData.description,
-            image: userData.image,  
-        },
-    });
+    const user = await editUserById(parseInt(uid), userData)
 
     res.send({
         data: user,
@@ -91,25 +84,19 @@ router.put("/:id", async (req, res) => {
 });
 
 router.patch("/:id", async (req, res) => {
+try {
     const uid = req.params.id;
     const userData = req.body;
 
-    const user = await prisma.user.update({
-        where: {
-            id: parseInt(uid),
-        },
-        data: {
-            name: userData.name,
-            price: userData.price,
-            description: userData.description,
-            image: userData.image,  
-        },
-    });
+    const user = await editUserById(parseInt(uid), userData);
 
     res.send({
         data: user,
-        message: "keubah toddd",
-    });
+        message: "edit patch berhasil euy",
+    }); 
+} catch (error) {
+    res.status(400).send(error.message);
+}
 });
 
 module.exports = router;
